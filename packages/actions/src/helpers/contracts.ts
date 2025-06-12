@@ -91,7 +91,7 @@ export const compileContract = async (contractPath: string): Promise<any> => {
     const input = {
         language: "Solidity",
         sources: {
-            Verifier: { content: data }
+            Groth16Verifier: { content: data }
         },
         settings: {
             outputSelection: {
@@ -104,7 +104,7 @@ export const compileContract = async (contractPath: string): Promise<any> => {
 
     try {
         const compiled = JSON.parse(solc.compile(JSON.stringify(input), { import: { contents: "" } }))
-        return compiled.contracts.Verifier.Verifier
+        return compiled.contracts.Groth16Verifier.Groth16Verifier
     } catch (error: any) {
         throw new Error(
             "There was an error while compiling the smart contract. Please check that the file is not corrupted and try again."
