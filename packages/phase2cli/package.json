@@ -32,7 +32,7 @@
     "scripts": {
         "build": "rimraf dist && rollup -c rollup.config.ts --configPlugin typescript",
         "build:watch": "rollup -c rollup.config.ts -w --configPlugin typescript",
-        "start": "ts-node --esm ./src/index.ts",
+        "start": "node --loader ts-node/esm ./src/index.ts",
         "auth": "yarn start auth",
         "auth:siwe": "yarn start auth-siwe",
         "auth:bandada": "yarn start auth-bandada",
