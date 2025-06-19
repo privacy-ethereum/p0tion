@@ -235,7 +235,17 @@ describe("Smart Contract", () => {
                 await createMockParticipant(adminFirestore, ceremony.uid, users[0].uid, coordinatorParticipant)
                 await createMockContribution(adminFirestore, ceremony.uid, circuit.uid, finalContribution, users[0].uid)
                 // create a bucket
-                await createS3Bucket(userFunctions, bucketName)
+                try {
+                    await createS3Bucket(userFunctions, bucketName)
+                } catch (error: any) {
+                    if (error.details.includes("provided name is already in use")) {
+                        console.log("Bucket already exists, skipping creation")
+                    }
+                    else {
+                        console.log("Error creating bucket", error)
+                        throw error
+                    }
+                }
                 await sleep(1000)
                 // upload all files to S3
                 await uploadFileToS3(bucketName, r1csStorageFilePath, r1csPath)
