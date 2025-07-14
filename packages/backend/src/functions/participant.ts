@@ -215,7 +215,14 @@ export const progressToNextCircuitForContribution = functions
                 status: ParticipantStatus.READY,
                 lastUpdated: getCurrentServerTimestampInMillis()
             })
-        else logAndThrowError(SPECIFIC_ERRORS.SE_CONTRIBUTE_CANNOT_PROGRESS_TO_NEXT_CIRCUIT)
+        else {
+            printLog(
+                `Participant/Contributor ${userId} cannot progress to the next circuit. ` +
+                `contributionProgress: ${contributionProgress} - contributionStep: ${contributionStep} - status: ${status}`,
+                LogLevel.DEBUG
+            )
+            logAndThrowError(SPECIFIC_ERRORS.SE_CONTRIBUTE_CANNOT_PROGRESS_TO_NEXT_CIRCUIT)
+        }
 
         printLog(
             `Participant/Contributor ${userId} progress to the circuit in position ${contributionProgress + 1}`,
