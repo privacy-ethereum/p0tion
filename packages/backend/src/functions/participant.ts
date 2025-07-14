@@ -326,6 +326,7 @@ export const permanentlyStoreCurrentContributionTimeAndHash = functions
             // Pre-condition: computing contribution step or finalizing (only for coordinator when finalizing ceremony).
             if (
                 contributionStep === ParticipantContributionStep.COMPUTING ||
+                contributionStep === ParticipantContributionStep.UPLOADING || // also accepting during the upload step in case the contribution is interrupted and resumed, which requires recomputing
                 (isCoordinator && status === ParticipantStatus.FINALIZING)
             )
                 // Send tx.
