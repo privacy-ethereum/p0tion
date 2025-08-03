@@ -171,7 +171,7 @@ export const verifyCeremony = async (
     ])
 
     // get the ceremony data - no need to do an existence check as
-    // we already checked that the ceremony exists in downloafAllCeremonyArtifacts
+    // we already checked that the ceremony exists in downloadAllCeremonyArtifacts
     const ceremonyData = fromQueryToFirebaseDocumentInfo(ceremonyQuery.docs)
     const ceremony = ceremonyData.at(0)
     // this is required to re-generate the final zKey
