@@ -246,7 +246,7 @@ export const downloadCeremonyArtifact = async (
 
     if (response.status !== 200 && !response.ok)
         throw new Error(
-            `There was an erorr while downloading the object ${storagePath} from the bucket ${bucketName}. Please check the function inputs and try again.`
+            `There was an error while downloading the object ${storagePath} from the bucket ${bucketName}. Please check the function inputs and try again.`
         )
 
     const content: any = response.body
