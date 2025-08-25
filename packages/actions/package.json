@@ -14,7 +14,7 @@
     "main": "dist/index.node.js",
     "types": "dist/types/src/index.d.ts",
     "engines": {
-        "node": ">=16.14.0"
+        "node": ">=20.0.0"
     },
     "files": [
         "dist/",
@@ -31,8 +31,8 @@
         "circom"
     ],
     "scripts": {
-        "build": "rimraf dist && rollup -c rollup.config.ts --configPlugin typescript",
-        "build:watch": "rollup -c rollup.config.ts -w --configPlugin typescript",
+        "build": "rimraf dist && rollup -c rollup.config.ts --configPlugin typescript --bundleConfigAsCjs",
+        "build:watch": "rollup -c rollup.config.ts -w --configPlugin typescript --bundleConfigAsCjs",
         "pre:publish": "yarn build",
         "compile:contracts": "hardhat compile",
         "test:contracts": "GOOGLE_APPLICATION_CREDENTIALS=\"../backend/serviceAccountKey.json\" && NODE_ENV=prod && TS_NODE_FILES=true hardhat test test/unit/contract.test.ts",

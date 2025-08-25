@@ -4,7 +4,10 @@
         "baseUrl": ".",
         "declaration": true,
         "declarationDir": "dist/types",
-        "moduleResolution": "Node16"
+        "moduleResolution": "node",
+        "module": "esnext"
     },
-    "include": ["src"]
+    "include": [
+        "src"
+    ]
 }
