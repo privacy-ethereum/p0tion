@@ -1,326 +1,269 @@
-// Main part for the PPoT Phase 1 Trusted Setup URLs to download PoT files.
-export const potFileDownloadMainUrl = `https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/`
-// Main part for the PPoT Phase 1 Trusted Setup PoT files to be downloaded.
-export const potFilenameTemplate = `ppot_0080_`
-// The genesis zKey index.
-export const genesisZkeyIndex = `00000`
-// The number of exponential iterations to be executed by SnarkJS when finalizing the ceremony.
-export const numExpIterations = 10
-// The Solidity version of the Verifier Smart Contract generated with SnarkJS when finalizing the ceremony.
-export const solidityVersion = "0.8.0"
-// The index of the final zKey.
-export const finalContributionIndex = "final"
-// The acronym for verification key.
-export const verificationKeyAcronym = "vkey"
-// The acronym for Verifier smart contract.
-export const verifierSmartContractAcronym = "verifier"
-// The tag for ec2 instances.
-export const ec2InstanceTag = "p0tionec2instance"
-// The name of the VM startup script file.
-export const vmBootstrapScriptFilename = "bootstrap.sh"
-// Match hash output by snarkjs in transcript log
-export const contribHashRegex = new RegExp("Contribution.+Hash.+\n\t\t.+\n\t\t.+\n.+\n\t\t.+\r?\n")
+import { Contract, ContractFactory, Signer } from "ethers"
+import { Firestore, where } from "firebase/firestore"
+import { Functions } from "firebase/functions"
+import fs from "fs"
+import solc from "solc"
+import {
+    downloadAllCeremonyArtifacts,
+    exportVerifierAndVKey,
+    generateGROTH16Proof,
+    generateZkeyFromScratch,
+    getFinalContributionBeacon,
+    verifyGROTH16Proof,
+    verifyZKey
+} from "./verification"
+import { compareHashes } from "./crypto"
+import { commonTerms, finalContributionIndex, verificationKeyAcronym, verifierSmartContractAcronym } from "./constants"
+import { fromQueryToFirebaseDocumentInfo, queryCollection } from "./database"
+import { unstringifyBigInts } from "./utils"
 
 /**
- * Define the supported VM configuration types.
- * @dev the VM configurations can be retrieved at https://aws.amazon.com/ec2/instance-types/
- * The on-demand prices for the configurations can be retrieved at https://aws.amazon.com/ec2/pricing/on-demand/.
- * @notice the price has to be intended as on-demand hourly billing usage for Linux OS
- * VMs located in the us-east-1 region expressed in USD.
+ * Formats part of a GROTH16 SNARK proof
+ * @link adapted from SNARKJS p256 function
+ * @param proofPart <any> a part of a proof to be formatted
+ * @returns <string> the formatted proof part
  */
-export const vmConfigurationTypes = {
-    t3_large: {
-        type: "t3.large",
-        ram: 8,
-        vcpu: 2,
-        pricePerHour: 0.08352
-    },
-    t3_2xlarge: {
-        type: "t3.2xlarge",
-        ram: 32,
-        vcpu: 8,
-        pricePerHour: 0.3328
-    },
-    c5_9xlarge: {
-        type: "c5.9xlarge",
-        ram: 72,
-        vcpu: 36,
-        pricePerHour: 1.53
-    },
-    c5_18xlarge: {
-        type: "c5.18xlarge",
-        ram: 144,
-        vcpu: 72,
-        pricePerHour: 3.06
-    },
-    c5a_8xlarge: {
-        type: "c5a.8xlarge",
-        ram: 64,
-        vcpu: 32,
-        pricePerHour: 1.232
-    },
-    c6id_32xlarge: {
-        type: "c6id.32xlarge",
-        ram: 256,
-        vcpu: 128,
-        pricePerHour: 6.4512
-    },
-    m6a_32xlarge: {
-        type: "m6a.32xlarge",
-        ram: 512,
-        vcpu: 128,
-        pricePerHour: 5.5296
+export const p256 = (proofPart: any) => {
+    let nProofPart = proofPart.toString(16)
+    while (nProofPart.length < 64) nProofPart = `0${nProofPart}`
+    nProofPart = `0x${nProofPart}`
+    return nProofPart
+}
+
+/**
+ * This function formats the calldata for Solidity
+ * @link adapted from SNARKJS formatSolidityCalldata function
+ * @dev this function is supposed to be called with
+ * @dev the output of generateGROTH16Proof
+ * @param circuitInput <string[]> Inputs to the circuit
+ * @param _proof <object> Proof
+ * @returns <SolidityCalldata> The calldata formatted for Solidity
+ */
+export const formatSolidityCalldata = (circuitInput: string[], _proof: any): any => {
+    try {
+        const proof = unstringifyBigInts(_proof) as any
+        // format the public inputs to the circuit
+        const formattedCircuitInput = []
+        for (const cInput of circuitInput) {
+            formattedCircuitInput.push(p256(unstringifyBigInts(cInput)))
+        }
+        // construct calldata
+        const calldata = {
+            arg1: [p256(proof.pi_a[0]), p256(proof.pi_a[1])],
+            arg2: [
+                [p256(proof.pi_b[0][1]), p256(proof.pi_b[0][0])],
+                [p256(proof.pi_b[1][1]), p256(proof.pi_b[1][0])]
+            ],
+            arg3: [p256(proof.pi_c[0]), p256(proof.pi_c[1])],
+            arg4: formattedCircuitInput
+        }
+        return calldata
+    } catch (error: any) {
+        throw new Error(
+            "There was an error while formatting the calldata. Please make sure that you are calling this function with the output of the generateGROTH16Proof function, and then please try again."
+        )
     }
 }
 
 /**
- * Define the PPoT Trusted Setup ceremony output powers of tau files size (in GB).
- * @dev the powers of tau files can be retrieved at https://github.com/weijiekoh/perpetualpowersoftau
+ * Verify a GROTH16 SNARK proof on chain
+ * @param contract <Contract> The contract instance
+ * @param proof <SolidityCalldata> The calldata formatted for Solidity
+ * @returns <Promise<boolean>> Whether the proof is valid or not
  */
-export const powersOfTauFiles = [
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_01.ptau",
-        size: 0.000084
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_02.ptau",
-        size: 0.000086
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_03.ptau",
-        size: 0.000091
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_04.ptau",
-        size: 0.0001
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_05.ptau",
-        size: 0.000117
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_06.ptau",
-        size: 0.000153
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_07.ptau",
-        size: 0.000225
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_08.ptau",
-        size: 0.0004
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_09.ptau",
-        size: 0.000658
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_10.ptau",
-        size: 0.0013
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_11.ptau",
-        size: 0.0023
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_12.ptau",
-        size: 0.0046
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_13.ptau",
-        size: 0.0091
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_14.ptau",
-        size: 0.0181
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_15.ptau",
-        size: 0.0361
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_16.ptau",
-        size: 0.0721
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_17.ptau",
-        size: 0.144
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_18.ptau",
-        size: 0.288
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_19.ptau",
-        size: 0.576
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_20.ptau",
-        size: 1.1
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_21.ptau",
-        size: 2.3
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_22.ptau",
-        size: 4.5
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_23.ptau",
-        size: 9.0
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_24.ptau",
-        size: 18.0
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_25.ptau",
-        size: 36.0
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_26.ptau",
-        size: 72.0
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_27.ptau",
-        size: 144.0
-    },
-    {
-        ref: "https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_final.ptau",
-        size: 288.0
-    }
-]
+export const verifyGROTH16ProofOnChain = async (contract: any, proof: any): Promise<boolean> => {
+    const res = await contract.verifyProof(proof.arg1, proof.arg2, proof.arg3, proof.arg4)
+    return res
+}
 
 /**
- * Commonly used terms.
- * @dev useful for creating paths, references to collections and queries, object properties, folder names, and so on.
+ * Compiles a contract given a path
+ * @param contractPath <string> path to the verifier contract
+ * @returns <Promise<any>> the compiled contract
  */
-export const commonTerms = {
-    collections: {
-        users: {
-            name: "users",
-            fields: {
-                creationTime: "creationTime",
-                displayName: "displayName",
-                email: "email",
-                emailVerified: "emailVerified",
-                lastSignInTime: "lastSignInTime",
-                lastUpdated: "lastUpdated",
-                name: "name",
-                photoURL: "photoURL"
-            }
+export const compileContract = async (contractPath: string): Promise<any> => {
+    if (!fs.existsSync(contractPath))
+        throw new Error(
+            "The contract path does not exist. Please make sure that you are passing a valid path to the contract and try again."
+        )
+
+    const data = fs.readFileSync(contractPath).toString()
+    const input = {
+        language: "Solidity",
+        sources: {
+            Verifier: { content: data }
         },
-        participants: {
-            name: "participants",
-            fields: {
-                contributionProgress: "contributionProgress",
-                contributionStartedAt: "contributionStartedAt",
-                contributionStep: "contributionStep",
-                contributions: "contributions",
-                lastUpdated: "lastUpdated",
-                status: "status",
-                verificationStartedAt: "verificationStartedAt"
-            }
-        },
-        avatars: {
-            name: "avatars",
-            fields: {
-                avatarUrl: "avatarUrl"
-            }
-        },
-        ceremonies: {
-            name: "ceremonies",
-            fields: {
-                coordinatorId: "coordinatorId",
-                description: "description",
-                endDate: "endDate",
-                lastUpdated: "lastUpdated",
-                penalty: "penalty",
-                prefix: "prefix",
-                startDate: "startDate",
-                state: "state",
-                timeoutType: "timeoutType",
-                title: "title",
-                type: "type"
-            }
-        },
-        circuits: {
-            name: "circuits",
-            fields: {
-                avgTimings: "avgTimings",
-                compiler: "compiler",
-                description: "description",
-                files: "files",
-                lastUpdated: "lastUpdated",
-                metadata: "metadata",
-                name: "name",
-                prefix: "prefix",
-                sequencePosition: "sequencePosition",
-                template: "template",
-                timeoutMaxContributionWaitingTime: "timeoutMaxContributionWaitingTime",
-                waitingQueue: "waitingQueue",
-                zKeySizeInBytes: "zKeySizeInBytes",
-                verification: "verification"
-            }
-        },
-        contributions: {
-            name: "contributions",
-            fields: {
-                contributionComputationTime: "contributionComputationTime",
-                files: "files",
-                lastUpdated: "lastUpdated",
-                participantId: "participantId",
-                valid: "valid",
-                verificationComputationTime: "verificationComputationTime",
-                zkeyIndex: "zKeyIndex"
-            }
-        },
-        timeouts: {
-            name: "timeouts",
-            fields: {
-                type: "type",
-                startDate: "startDate",
-                endDate: "endDate"
+        settings: {
+            outputSelection: {
+                "*": {
+                    "*": ["*"]
+                }
             }
         }
-    },
-    foldersAndPathsTerms: {
-        output: `output`,
-        setup: `setup`,
-        contribute: `contribute`,
-        finalize: `finalize`,
-        pot: `pot`,
-        zkeys: `zkeys`,
-        wasm: `wasm`,
-        vkeys: `vkeys`,
-        metadata: `metadata`,
-        transcripts: `transcripts`,
-        attestation: `attestation`,
-        verifiers: `verifiers`
-    },
-    cloudFunctionsNames: {
-        setupCeremony: "setupCeremony",
-        checkParticipantForCeremony: "checkParticipantForCeremony",
-        progressToNextCircuitForContribution: "progressToNextCircuitForContribution",
-        resumeContributionAfterTimeoutExpiration: "resumeContributionAfterTimeoutExpiration",
-        createBucket: "createBucket",
-        generateGetObjectPreSignedUrl: "generateGetObjectPreSignedUrl",
-        progressToNextContributionStep: "progressToNextContributionStep",
-        permanentlyStoreCurrentContributionTimeAndHash: "permanentlyStoreCurrentContributionTimeAndHash",
-        startMultiPartUpload: "startMultiPartUpload",
-        temporaryStoreCurrentContributionMultiPartUploadId: "temporaryStoreCurrentContributionMultiPartUploadId",
-        temporaryStoreCurrentContributionUploadedChunkData: "temporaryStoreCurrentContributionUploadedChunkData",
-        generatePreSignedUrlsParts: "generatePreSignedUrlsParts",
-        completeMultiPartUpload: "completeMultiPartUpload",
-        checkIfObjectExist: "checkIfObjectExist",
-        verifyContribution: "verifycontribution",
-        checkAndPrepareCoordinatorForFinalization: "checkAndPrepareCoordinatorForFinalization",
-        finalizeCircuit: "finalizeCircuit",
-        finalizeCeremony: "finalizeCeremony",
-        downloadCircuitArtifacts: "downloadCircuitArtifacts",
-        transferObject: "transferObject",
-        bandadaValidateProof: "bandadaValidateProof",
-        checkNonceOfSIWEAddress: "checkNonceOfSIWEAddress"
+    }
+
+    try {
+        const compiled = JSON.parse(solc.compile(JSON.stringify(input), { import: { contents: "" } }))
+        return compiled.contracts.Verifier.Verifier
+    } catch (error: any) {
+        throw new Error(
+            "There was an error while compiling the smart contract. Please check that the file is not corrupted and try again."
+        )
+    }
+}
+
+/**
+ * Deploy the verifier contract
+ * @param contractPath <string> path to the verifier contract
+ * @param signer <Signer> signer for contract deployment
+ * @returns <Promise<Contract>> The contract instance
+ */
+export const deployVerifierContract = async (contractPath: string, signer: Signer): Promise<Contract> => {
+    const compiledContract = await compileContract(contractPath)
+    // connect to hardhat node running locally
+    const contractFactory = new ContractFactory(compiledContract.abi, compiledContract.evm.bytecode.object, signer)
+    const contract = await contractFactory.deploy()
+    await contract.deployed()
+    return contract
+}
+
+/**
+ * Verify a ceremony validity
+ * 1. Download all artifacts
+ * 2. Verify that the zkeys are valid
+ * 3. Extract the verifier and the vKey
+ * 4. Generate a proof and verify it locally
+ * 5. Deploy Verifier contract and verify the proof on-chain
+ * @param functions <Functions> firebase functions instance
+ * @param firestore <Firestore> firebase firestore instance
+ * @param ceremonyPrefix <string> ceremony prefix
+ * @param outputDirectory <string> output directory where to store the ceremony artifacts
+ * @param circuitInputsPath <string> path to the circuit inputs file
+ * @param verifierTemplatePath <string> path to the verifier template file
+ * @param signer <Signer> signer for contract interaction
+ * @param logger <any> logger for printing snarkjs output
+ */
+export const verifyCeremony = async (
+    functions: Functions,
+    firestore: Firestore,
+    ceremonyPrefix: string,
+    outputDirectory: string,
+    circuitInputsPath: string,
+    verifierTemplatePath: string,
+    signer: Signer,
+    logger?: any
+): Promise<void> => {
+    // 1. download all ceremony artifacts
+    const ceremonyArtifacts = await downloadAllCeremonyArtifacts(functions, firestore, ceremonyPrefix, outputDirectory)
+    // if there are no ceremony artifacts, we throw an error
+    if (ceremonyArtifacts.length === 0)
+        throw new Error(
+            "There was an error while downloading all ceremony artifacts. Please review your ceremony prefix and try again."
+        )
+
+    // extract the circuit inputs
+    if (!fs.existsSync(circuitInputsPath))
+        throw new Error("The circuit inputs file does not exist. Please check the path and try again.")
+    const circuitsInputs = JSON.parse(fs.readFileSync(circuitInputsPath).toString())
+
+    // find the ceremony given the prefix
+    const ceremonyQuery = await queryCollection(firestore, commonTerms.collections.ceremonies.name, [
+        where(commonTerms.collections.ceremonies.fields.prefix, "==", ceremonyPrefix)
+    ])
+
+    // get the ceremony data - no need to do an existence check as
+    // we already checked that the ceremony exists in downloafAllCeremonyArtifacts
+    const ceremonyData = fromQueryToFirebaseDocumentInfo(ceremonyQuery.docs)
+    const ceremony = ceremonyData.at(0)
+    // this is required to re-generate the final zKey
+    const { coordinatorId } = ceremony!.data
+    const ceremonyId = ceremony!.id
+
+    // we verify each circuit separately
+    for (const ceremonyArtifact of ceremonyArtifacts) {
+        // get the index of the circuit in the list of circuits
+        const inputIndex = ceremonyArtifacts.indexOf(ceremonyArtifact)
+
+        // 2. verify the final zKey
+        const isValid = await verifyZKey(
+            ceremonyArtifact.r1csLocalFilePath,
+            ceremonyArtifact.finalZkeyLocalFilePath,
+            ceremonyArtifact.potLocalFilePath,
+            logger
+        )
+
+        if (!isValid)
+            throw new Error(
+                `The zkey for Circuit ${ceremonyArtifact.circuitPrefix} is not valid. Please check that the artifact is correct. If not, you might have to re run the final contribution to compute a valid final zKey.`
+            )
+
+        // 3. get the final contribution beacon
+        const contributionBeacon = await getFinalContributionBeacon(
+            firestore,
+            ceremonyId,
+            ceremonyArtifact.circuitId,
+            coordinatorId
+        )
+        const generatedFinalZkeyPath = `${ceremonyArtifact.directoryRoot}/${ceremonyArtifact.circuitPrefix}_${finalContributionIndex}_verification.zkey`
+        // 4. re generate the zkey using the beacon and check hashes
+        await generateZkeyFromScratch(
+            true,
+            ceremonyArtifact.r1csLocalFilePath,
+            ceremonyArtifact.potLocalFilePath,
+            generatedFinalZkeyPath,
+            logger,
+            ceremonyArtifact.lastZkeyLocalFilePath,
+            coordinatorId,
+            contributionBeacon
+        )
+        const zKeysMatching = await compareHashes(generatedFinalZkeyPath, ceremonyArtifact.finalZkeyLocalFilePath)
+        if (!zKeysMatching)
+            throw new Error(
+                `The final zkey for the Circuit ${ceremonyArtifact.circuitPrefix} does not match the one generated from the beacon. Please confirm manually by downloading from the S3 bucket.`
+            )
+
+        // 5. extract the verifier and the vKey
+        const verifierLocalPath = `${ceremonyArtifact.directoryRoot}/${ceremonyArtifact.circuitPrefix}_${verifierSmartContractAcronym}_verification.sol`
+        const vKeyLocalPath = `${ceremonyArtifact.directoryRoot}/${ceremonyArtifact.circuitPrefix}_${verificationKeyAcronym}_verification.json`
+        await exportVerifierAndVKey(
+            ceremonyArtifact.finalZkeyLocalFilePath,
+            verifierLocalPath,
+            vKeyLocalPath,
+            verifierTemplatePath
+        )
+
+        // 6. verify that the generated verifier and vkey match the ones downloaded from S3
+        const verifierMatching = await compareHashes(verifierLocalPath, ceremonyArtifact.verifierLocalFilePath)
+        if (!verifierMatching)
+            throw new Error(
+                `The verifier contract for the Contract ${ceremonyArtifact.circuitPrefix} does not match the one downloaded from S3. Please confirm manually by downloading from the S3 bucket.`
+            )
+        const vKeyMatching = await compareHashes(vKeyLocalPath, ceremonyArtifact.verificationKeyLocalFilePath)
+        if (!vKeyMatching)
+            throw new Error(
+                `The verification key for the Contract ${ceremonyArtifact.circuitPrefix} does not match the one downloaded from S3. Please confirm manually by downloading from the S3 bucket.`
+            )
+
+        // 7. generate a proof and verify it locally (use either of the downloaded or generated as the hashes will have matched at this point)
+        const { proof, publicSignals } = await generateGROTH16Proof(
+            circuitsInputs[inputIndex],
+            ceremonyArtifact.finalZkeyLocalFilePath,
+            ceremonyArtifact.wasmLocalFilePath,
+            logger
+        )
+        const isProofValid = await verifyGROTH16Proof(vKeyLocalPath, publicSignals, proof)
+        if (!isProofValid)
+            throw new Error(
+                `Could not verify the proof for Circuit ${ceremonyArtifact.circuitPrefix}. Please check that the artifacts are correct as well as the inputs to the circuit, and try again.`
+            )
+
+        // 8. deploy Verifier contract and verify the proof on-chain
+        const verifierContract = await deployVerifierContract(verifierLocalPath, signer)
+        const formattedProof = await formatSolidityCalldata(publicSignals, proof)
+        const isProofValidOnChain = await verifyGROTH16ProofOnChain(verifierContract, formattedProof)
+        if (!isProofValidOnChain)
+            throw new Error(
+                `Could not verify the proof on-chain for Circuit ${ceremonyArtifact.circuitPrefix}. Please check that the artifacts are correct as well as the inputs to the circuit, and try again.`
+            )
     }
 }
