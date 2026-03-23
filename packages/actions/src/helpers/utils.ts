@@ -620,28 +620,48 @@ export const parseCeremonyFile = async (path: string, cleanup: boolean = false):
             // download the r1cs to extract the metadata
             const streamPipeline = promisify(pipeline)
 
-            // Make the call.
-            const responseR1CS = await fetch(artifacts.r1csStoragePath)
+            // Check if r1cs file already exists
+            let r1csExists = false
+            if (fs.existsSync(localR1csPath)) {
+                console.log(`Found existing r1cs file for circuit ${circuitData.name}. Skipping download.`)
+                r1csExists = true
+            }
 
-            // Handle errors.
-            if (!responseR1CS.ok && responseR1CS.status !== 200)
-                throw new Error(
-                    `There was an error while trying to download the r1cs file for circuit ${circuitData.name}. Please check that the file has the correct permissions (public) set.`
-                )
+            if (!r1csExists) {
+                // Make the call to download r1cs.
+                const responseR1CS = await fetch(artifacts.r1csStoragePath)
 
-            await streamPipeline(responseR1CS.body!, createWriteStream(localR1csPath))
-            // Write the file locally
+                // Handle errors.
+                if (!responseR1CS.ok && responseR1CS.status !== 200)
+                    throw new Error(
+                        `There was an error while trying to download the r1cs file for circuit ${circuitData.name}. Please check that the file has the correct permissions (public) set.`
+                    )
+
+                // Write the file locally
+                await streamPipeline(responseR1CS.body!, createWriteStream(localR1csPath))
+                console.log(`Downloaded r1cs file for circuit ${circuitData.name}.`)
+            }
 
             // extract the metadata from the r1cs
             const metadata = getR1CSInfo(localR1csPath)
 
-            // download wasm too to ensure it's available
-            const responseWASM = await fetch(artifacts.wasmStoragePath)
-            if (!responseWASM.ok && responseWASM.status !== 200)
-                throw new Error(
-                    `There was an error while trying to download the WASM file for circuit ${circuitData.name}. Please check that the file has the correct permissions (public) set.`
-                )
-            await streamPipeline(responseWASM.body!, createWriteStream(localWasmPath))
+            // Check if wasm file already exists
+            let wasmExists = false
+            if (fs.existsSync(localWasmPath)) {
+                console.log(`Found existing wasm file for circuit ${circuitData.name}. Skipping download.`)
+                wasmExists = true
+            }
+
+            if (!wasmExists) {
+                // download wasm if it's not available
+                const responseWASM = await fetch(artifacts.wasmStoragePath)
+                if (!responseWASM.ok && responseWASM.status !== 200)
+                    throw new Error(
+                        `There was an error while trying to download the WASM file for circuit ${circuitData.name}. Please check that the file has the correct permissions (public) set.`
+                    )
+                await streamPipeline(responseWASM.body!, createWriteStream(localWasmPath))
+                console.log(`Downloaded wasm file for circuit ${circuitData.name}.`)
+            }
 
             // validate that the circuit hash and template links are valid
             const { template } = circuitData
