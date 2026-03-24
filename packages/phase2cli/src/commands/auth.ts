@@ -47,12 +47,14 @@ export const expirationCountdownForGithubOAuth = (expirationInSeconds: number) =
             expirationInSeconds -= interval
             secondsCounter -= interval
 
-            if (secondsCounter % 60 === 0) secondsCounter = 0
+            if (secondsCounter === 0) {
+                secondsCounter = 59;
+            }
 
             // Notify user.
             process.stdout.write(
                 `${theme.symbols.warning} Expires in ${theme.text.bold(
-                    theme.colors.magenta(`00:${Math.floor(expirationInSeconds / 60)}:${secondsCounter}`)
+                    theme.colors.magenta(`00:${Math.floor(expirationInSeconds / 60)}:${secondsCounter.toString().padStart(2, "0")}`)
                 )}\r`
             )
         } else {
@@ -67,6 +69,7 @@ export const expirationCountdownForGithubOAuth = (expirationInSeconds: number) =
  * @param verification <Verification> - the data from Github OAuth2.0 device flow.
  */
 export const onVerification = async (verification: Verification): Promise<void> => {
+    verification.interval = 7 // overwrite Github interval with 7 seconds
     // Copy code to clipboard.
     let noClipboard = false
     try {

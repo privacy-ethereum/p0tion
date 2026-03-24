@@ -481,6 +481,10 @@ export const verifycontribution = functionsV2.https.onCall(
             )
                 logAndThrowError(COMMON_ERRORS.CM_WRONG_CONFIGURATION)
 
+            const BUCKET_NAME_REGEX = /^[a-z0-9][a-z0-9\-]{1,61}[a-z0-9]$/
+            if (!BUCKET_NAME_REGEX.test(request.data.bucketName))
+                logAndThrowError(SPECIFIC_ERRORS.WRONG_BUCKET_NAME)
+
             // Step (0).
 
             // Prepare and start timer.

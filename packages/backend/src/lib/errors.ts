@@ -189,6 +189,11 @@ export const SPECIFIC_ERRORS = {
         "unavailable",
         "VM command execution has failed due to an unknown status code",
         "Please, contact the coordinator if this error persists."
+    ),
+    WRONG_BUCKET_NAME: makeError(
+        "invalid-argument",
+        "The provided bucket name is not valid.",
+        "Bucket names must be between 3 and 63 characters long, can only contain lowercase letters, numbers, and hyphens, and must start and end with a letter or number."
     )
 }
 
