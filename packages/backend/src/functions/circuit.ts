@@ -880,7 +880,7 @@ export const verifycontribution = functionsV2.https.onCall(
                     transcriptLogger
                 )
 
-                dumpLog(verificationTranscriptTemporaryLocalPath)
+                await dumpLog(verificationTranscriptTemporaryLocalPath)
 
                 // Compute contribution hash.
                 lastZkeyBlake2bHash = await blake512FromPath(lastZkeyTempFilePath)

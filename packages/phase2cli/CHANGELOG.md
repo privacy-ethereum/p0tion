@@ -23,7 +23,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 **Note:** Version bump only for package @p0tion/phase2cli
 
-## [1.2.4](https://github.com/privacy-scaling-explorations/p0tion/compare/v1.2.3...v1.2.2) (2024-07-06)
+## [1.2.4](https://github.com/privacy-scaling-explorations/p0tion/compare/v1.2.3...v1.2.4) (2024-07-06)
 
 ### Features
 
