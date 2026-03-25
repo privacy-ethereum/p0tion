@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.2.8](https://github.com/privacy-scaling-explorations/p0tion/compare/v1.2.6...v1.2.8) (2026-03-25)
+
+
+### Bug Fixes
+
+* **actions:** use Project instead of ProjectName ([2d2ff11](https://github.com/privacy-scaling-explorations/p0tion/commit/2d2ff1197d8f14d0208f549558674a2ab99ff684))
+* **all:** lint and prettier modifications ([e85bb5f](https://github.com/privacy-scaling-explorations/p0tion/commit/e85bb5fdcb73000365c271751d1689d1fdcfc0b9))
+* **backend:** prevent script injection in bucketName ([77bee29](https://github.com/privacy-scaling-explorations/p0tion/commit/77bee2964e8750e7ca067c650b92d13eb6e8c4d2))
+* **backend:** use module node16 ([b5c301d](https://github.com/privacy-scaling-explorations/p0tion/commit/b5c301d33cf4b049e356a5c1458ecff71a1d4888))
+* convert to milis the whole number ([fd1c02e](https://github.com/privacy-scaling-explorations/p0tion/commit/fd1c02e7d710b83533706515edddca1e1d93e64d))
+* increase bandada memory limit ([c5bd5d3](https://github.com/privacy-scaling-explorations/p0tion/commit/c5bd5d37bfbeb28ba551e2896dbb8c51fbdb75dc))
+* increase cpu use ([a37008f](https://github.com/privacy-scaling-explorations/p0tion/commit/a37008fed060987801dd108b05e4f41d9bb4522a))
+* increase memory in initEmptyWaitingQueueForCircuit ([40b9b6e](https://github.com/privacy-scaling-explorations/p0tion/commit/40b9b6e26bfc38d820fd18e0b0b2d6153688f3d0))
+* increase memory limit for verify contribution cf ([b292420](https://github.com/privacy-scaling-explorations/p0tion/commit/b29242078bcf88005272b0fabfaf876e4a63f0f5))
+* memory increase to 24gb ([bbaaa16](https://github.com/privacy-scaling-explorations/p0tion/commit/bbaaa16c7a8a13b680ad7a2b1c02ef85775ba6d7))
+* recover from being stuck in the completed step ([05ec4fc](https://github.com/privacy-scaling-explorations/p0tion/commit/05ec4fc1f064c414939d772803d8e92ec7dafe22))
+* send cpu value as number ([06d1ee9](https://github.com/privacy-scaling-explorations/p0tion/commit/06d1ee9074ca8fee8f6038bb859d1c05d0c8d91b))
+* try different set ([156891d](https://github.com/privacy-scaling-explorations/p0tion/commit/156891dd5a8c626695eeb79c4d8c1933669db3c1))
+* typos in documentation files ([#340](https://github.com/privacy-scaling-explorations/p0tion/issues/340)) ([d832c6f](https://github.com/privacy-scaling-explorations/p0tion/commit/d832c6ff9d08e0d76b45264d45453b0a337c1ae5))
+
+
+
 ## [1.2.7](https://github.com/privacy-scaling-explorations/p0tion/compare/v1.2.6...v1.2.7) (2026-03-25)
 
 ### Bug Fixes

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.2.8](https://github.com/privacy-scaling-explorations/p0tion/compare/v1.2.6...v1.2.8) (2026-03-25)
+
+
+### Bug Fixes
+
+* **all:** lint and prettier modifications ([e85bb5f](https://github.com/privacy-scaling-explorations/p0tion/commit/e85bb5fdcb73000365c271751d1689d1fdcfc0b9))
+* better countdown + increase gh interval for timeouts ([085b794](https://github.com/privacy-scaling-explorations/p0tion/commit/085b7949650e46d8d23b09366e2fc5afc2d08dbe))
+* typos in documentation files ([#340](https://github.com/privacy-scaling-explorations/p0tion/issues/340)) ([d832c6f](https://github.com/privacy-scaling-explorations/p0tion/commit/d832c6ff9d08e0d76b45264d45453b0a337c1ae5))
+
+
+
 ## [1.2.7](https://github.com/privacy-scaling-explorations/p0tion/compare/v1.2.6...v1.2.7) (2026-03-25)
 
 ### Bug Fixes
