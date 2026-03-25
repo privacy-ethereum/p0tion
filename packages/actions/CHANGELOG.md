@@ -5,13 +5,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## [1.2.8](https://github.com/privacy-scaling-explorations/p0tion/compare/v1.2.6...v1.2.8) (2026-03-25)
 
-
 ### Bug Fixes
 
-* **actions:** use Project instead of ProjectName ([2d2ff11](https://github.com/privacy-scaling-explorations/p0tion/commit/2d2ff1197d8f14d0208f549558674a2ab99ff684))
-* **all:** lint and prettier modifications ([e85bb5f](https://github.com/privacy-scaling-explorations/p0tion/commit/e85bb5fdcb73000365c271751d1689d1fdcfc0b9))
-
-
+-   **actions:** use Project instead of ProjectName ([2d2ff11](https://github.com/privacy-scaling-explorations/p0tion/commit/2d2ff1197d8f14d0208f549558674a2ab99ff684))
+-   **all:** lint and prettier modifications ([e85bb5f](https://github.com/privacy-scaling-explorations/p0tion/commit/e85bb5fdcb73000365c271751d1689d1fdcfc0b9))
 
 ## [1.2.7](https://github.com/privacy-scaling-explorations/p0tion/compare/v1.2.6...v1.2.7) (2026-03-25)
 
