@@ -6,10 +6,7 @@
     "functions": {
         "predeploy": "yarn --cwd \"$RESOURCE_DIR\" build",
         "source": ".",
-        "ignore": [
-            "node_modules",
-            "aws"
-        ]
+        "ignore": ["node_modules", "aws"]
     },
     "emulators": {
         "singleProjectMode": true,

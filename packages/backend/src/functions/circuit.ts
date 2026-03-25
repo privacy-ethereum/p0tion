@@ -276,8 +276,8 @@ const waitForVMCommandExecution = (ssm: SSMClient, vmInstanceId: string, command
                 // if it errors out, let's just log it as a warning so the coordinator is aware
                 try {
                     await stopEC2Instance(ec2, vmInstanceId)
-                } catch (error: any) {
-                    printLog(`Error while stopping VM instance ${vmInstanceId} - Error ${error}`, LogLevel.WARN)
+                } catch (stopError: any) {
+                    printLog(`Error while stopping VM instance ${vmInstanceId} - Error ${stopError}`, LogLevel.WARN)
                 }
 
                 if (!error.toString().includes(commandId)) logAndThrowError(COMMON_ERRORS.CM_INVALID_COMMAND_EXECUTION)
@@ -371,7 +371,7 @@ export const coordinateCeremonyParticipant = functionsV1
         const participantCompletedContribution =
             prevContributionProgress === changedContributionProgress &&
             (prevStatus === ParticipantStatus.CONTRIBUTING ||
-            prevContributionStep === ParticipantContributionStep.VERIFYING) &&
+                prevContributionStep === ParticipantContributionStep.VERIFYING) &&
             changedStatus === ParticipantStatus.CONTRIBUTED &&
             changedContributionStep === ParticipantContributionStep.COMPLETED
 
@@ -481,9 +481,8 @@ export const verifycontribution = functionsV2.https.onCall(
             )
                 logAndThrowError(COMMON_ERRORS.CM_WRONG_CONFIGURATION)
 
-            const BUCKET_NAME_REGEX = /^[a-z0-9][a-z0-9\-]{1,61}[a-z0-9]$/
-            if (!BUCKET_NAME_REGEX.test(request.data.bucketName))
-                logAndThrowError(SPECIFIC_ERRORS.WRONG_BUCKET_NAME)
+            const BUCKET_NAME_REGEX = /^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/
+            if (!BUCKET_NAME_REGEX.test(request.data.bucketName)) logAndThrowError(SPECIFIC_ERRORS.WRONG_BUCKET_NAME)
 
             // Step (0).
 
@@ -567,17 +566,14 @@ export const verifycontribution = functionsV2.https.onCall(
 
             const verificationTaskTimer = new Timer({ label: `${ceremonyId}-${circuitId}-${participantDoc.id}` })
 
-            const dumpLog = async (path: string) => {
-                const fs = require('fs');
+            const dumpLog = async (path: string): Promise<void> => {
                 printLog(`transcript >>>>>>`, LogLevel.DEBUG)
-                fs.readFile(path, 'utf8', (err: any, data: any) => {
-                    if (err) {
-                        printLog(err, LogLevel.ERROR);
-                        return;
-                    }
-                    printLog(data, LogLevel.DEBUG);
-                });
-
+                try {
+                    const data = await fs.promises.readFile(path, "utf8")
+                    printLog(data, LogLevel.DEBUG)
+                } catch (readError: any) {
+                    printLog(readError, LogLevel.ERROR)
+                }
             }
 
             const completeVerification = async () => {
@@ -761,7 +757,9 @@ export const verifycontribution = functionsV2.https.onCall(
                             contributionComputation: isContributionValid
                                 ? newAvgContributionComputationTime
                                 : avgContributionComputationTime,
-                            fullContribution: isContributionValid ? newAvgFullContributionTime : avgFullContributionTime,
+                            fullContribution: isContributionValid
+                                ? newAvgFullContributionTime
+                                : avgFullContributionTime,
                             verifyCloudFunction: isContributionValid
                                 ? newAvgVerifyCloudFunctionTime
                                 : avgVerifyCloudFunctionTime
@@ -826,7 +824,7 @@ export const verifycontribution = functionsV2.https.onCall(
                     printLog(`Starting the execution of command ${commandId}`, LogLevel.DEBUG)
 
                     // Step (1.A.3.3).
-                    return waitForVMCommandExecution(ssm, vmInstanceId, commandId)
+                    return await waitForVMCommandExecution(ssm, vmInstanceId, commandId)
                         .then(async () => {
                             // Command execution successfully completed.
                             printLog(`Command ${commandId} execution has been successfully completed`, LogLevel.DEBUG)
@@ -849,7 +847,9 @@ export const verifycontribution = functionsV2.https.onCall(
                 printLog(`zkey file: ${firstZkeyStoragePath}`, LogLevel.DEBUG)
                 // Prepare temporary file paths.
                 // (nb. these are needed to download the necessary artifacts for verification from AWS S3).
-                verificationTranscriptTemporaryLocalPath = createTemporaryLocalPath(verificationTranscriptCompleteFilename)
+                verificationTranscriptTemporaryLocalPath = createTemporaryLocalPath(
+                    verificationTranscriptCompleteFilename
+                )
                 const potTempFilePath = createTemporaryLocalPath(`${circuitId}_${participantDoc.id}.pot`)
                 const firstZkeyTempFilePath = createTemporaryLocalPath(`${circuitId}_${participantDoc.id}_genesis.zkey`)
                 const lastZkeyTempFilePath = createTemporaryLocalPath(`${circuitId}_${participantDoc.id}_last.zkey`)
@@ -897,8 +897,11 @@ export const verifycontribution = functionsV2.https.onCall(
 
                 await completeVerification()
             }
+
+            return null
         } catch (error: any) {
             logAndThrowError(makeError("unknown", error))
+            return null
         }
     }
 )
