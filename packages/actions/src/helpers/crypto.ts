@@ -24,11 +24,7 @@ export const blake512FromPath = async (path: fs.PathLike): Promise<string> => {
 
     const hash: string = await new Promise((resolve) => {
         fs.createReadStream(path)
-            .on("data", (chunk: string | Buffer) => {
-                if (typeof chunk === "string") {
-                    chunk = Buffer.from(chunk)
-                }
-
+            .on("data", (chunk: Buffer) => {
                 blake.blake2bUpdate(context, chunk)
             })
             .on("end", () => {

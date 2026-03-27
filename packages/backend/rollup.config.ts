@@ -1,5 +1,5 @@
 import * as fs from "fs"
-import typescript from "@rollup/plugin-typescript"
+import typescript from "rollup-plugin-typescript2"
 import cleanup from "rollup-plugin-cleanup"
 import autoExternal from "rollup-plugin-auto-external"
 
@@ -23,6 +23,7 @@ export default {
         autoExternal(),
         (typescript as any)({
             tsconfig: "./build.tsconfig.json",
+            useTsconfigDeclarationDir: true
         }),
         cleanup({ comments: "jsdoc" })
     ]

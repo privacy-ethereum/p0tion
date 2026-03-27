@@ -327,7 +327,7 @@ export const createCustomLoggerForFile = (filename: string, level: winston.Logge
         level,
         transports: new winston.transports.File({
             filename,
-            format: winston.format.printf((log) => log.message as string),
+            format: winston.format.printf((log) => log.message),
             level
         })
     })

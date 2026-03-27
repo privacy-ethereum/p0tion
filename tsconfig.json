@@ -4,7 +4,7 @@
         "strict": true,
         "target": "ESNext",
         "module": "ESNext",
-        "moduleResolution": "nodenext",
+        "moduleResolution": "node",
         "esModuleInterop": true,
         "resolveJsonModule": true,
         "preserveConstEnums": true,
@@ -13,20 +13,15 @@
         "declarationMap": true,
         "allowSyntheticDefaultImports": true,
         "declarationDir": "types",
-        "typeRoots": [
-            "node_modules/@types",
-            "types"
-        ],
+        "typeRoots": ["node_modules/@types", "types"],
         "paths": {
-            "@p0tion/*": [
-                "packages/*/src"
-            ]
+            "@p0tion/*": ["packages/*/src"]
         }
     },
     "ts-node": {
         "compilerOptions": {
             "target": "esnext",
-            "module": "nodenext"
+            "module": "commonjs"
         }
     }
 }

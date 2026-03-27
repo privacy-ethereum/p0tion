@@ -1,5 +1,5 @@
 import * as fs from "fs"
-import typescript from "@rollup/plugin-typescript"
+import typescript from "rollup-plugin-typescript2"
 import cleanup from "rollup-plugin-cleanup"
 import autoExternal from "rollup-plugin-auto-external"
 
@@ -13,7 +13,7 @@ const banner = `/**
  * @see [Github]{@link ${pkg.homepage}}
 */`
 
-const config = {
+export default {
     input: "src/index.ts",
     output: [
         { file: pkg.exports.require, format: "cjs", banner, exports: "auto" },
@@ -24,10 +24,8 @@ const config = {
         autoExternal(),
         (typescript as any)({
             tsconfig: "./build.tsconfig.json",
-            sourceMap: true
+            useTsconfigDeclarationDir: true
         }),
         cleanup({ comments: "jsdoc" })
     ]
 }
-
-export default config

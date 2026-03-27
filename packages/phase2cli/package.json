@@ -32,7 +32,7 @@
     "scripts": {
         "build": "rimraf dist && rollup -c rollup.config.ts --configPlugin typescript",
         "build:watch": "rollup -c rollup.config.ts -w --configPlugin typescript",
-        "start": "node --loader ts-node/esm ./src/index.ts",
+        "start": "ts-node --esm ./src/index.ts",
         "auth": "yarn start auth",
         "auth:siwe": "yarn start auth-siwe",
         "auth:bandada": "yarn start auth-bandada",
@@ -48,7 +48,6 @@
         "docs": "typedoc src/**/*.ts --out ../../docs/phase2cli"
     },
     "devDependencies": {
-        "@rollup/plugin-typescript": "^11.1.6",
         "@types/clear": "^0.1.2",
         "@types/cli-progress": "^3.11.0",
         "@types/figlet": "^1.5.6",
@@ -62,6 +61,7 @@
         "rollup-plugin-auto-external": "^2.0.0",
         "rollup-plugin-cleanup": "^3.2.1",
         "rollup-plugin-copy": "^3.5.0",
+        "rollup-plugin-typescript2": "^0.34.1",
         "solc": "^0.8.19",
         "ts-node": "^10.9.1",
         "typescript": "^5.0.4"

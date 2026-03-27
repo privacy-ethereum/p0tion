@@ -1,5 +1,5 @@
 import * as fs from "fs"
-import typescript from "@rollup/plugin-typescript"
+import typescript from "rollup-plugin-typescript2"
 import autoExternal from "rollup-plugin-auto-external"
 import cleanup from "rollup-plugin-cleanup"
 import copy from "rollup-plugin-copy"
@@ -23,7 +23,7 @@ export default {
         autoExternal(),
         (typescript as any)({
             tsconfig: "./build.tsconfig.json",
-            sourceMap: true
+            useTsconfigDeclarationDir: true
         }),
         (copy as any)({
             targets: [{ src: "public/*", dest: "dist/public" }]

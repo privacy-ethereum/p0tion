@@ -3,15 +3,8 @@
     "compilerOptions": {
         "baseUrl": ".",
         "skipLibCheck": true,
-        "moduleResolution": "nodenext",
-        "module": "nodenext"
+        "moduleResolution": "Node16"
     },
-    "include": [
-        "src/**/*",
-        "test/**/*",
-        "rollup.config.ts"
-    ],
-    "files": [
-        "./hardhat.config.ts"
-    ]
+    "include": ["src/**/*", "test/**/*", "rollup.config.ts"],
+    "files": ["./hardhat.config.ts"]
 }

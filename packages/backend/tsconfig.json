@@ -3,12 +3,7 @@
     "compilerOptions": {
         "baseUrl": ".",
         "skipLibCheck": true,
-        "moduleResolution": "node",
-        "module": "commonjs"
+        "moduleResolution": "Node16"
     },
-    "include": [
-        "src/**/*",
-        "test/**/*",
-        "rollup.config.ts"
-    ]
+    "include": ["src/**/*", "test/**/*", "rollup.config.ts"]
 }

@@ -1,12 +1,10 @@
 {
-    "extends": "./tsconfig.json",
+    "extends": "../../tsconfig.json",
     "compilerOptions": {
         "baseUrl": ".",
         "declaration": true,
         "declarationDir": "dist/types",
-        "moduleResolution": "nodenext",
-        "module": "ESNext",
-        "outDir": "dist"
+        "moduleResolution": "Node16"
     },
     "include": ["src"],
     "files": ["./hardhat.config.ts"]
