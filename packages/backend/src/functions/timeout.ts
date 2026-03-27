@@ -128,7 +128,7 @@ export const checkAndRemoveBlockingContributor = functions
                                         ? Number(contributionStartedAt) +
                                           Number(avgFullContribution) +
                                           Number(timeoutDynamicThreshold)
-                                        : ( Number(contributionStartedAt) + Number(fixedTimeWindow) ) * 60000 // * 60000 = convert minutes to millis.
+                                        : (Number(contributionStartedAt) + Number(fixedTimeWindow)) * 60000 // * 60000 = convert minutes to millis.
 
                                 // Case (D).
                                 const timeoutExpirationDateInMsForVerificationCloudFunction =
@@ -168,7 +168,7 @@ export const checkAndRemoveBlockingContributor = functions
                                         LogLevel.WARN
                                     )
 
-                                        // Case (E).
+                                    // Case (E).
                                     let nextCurrentContributorId = ""
 
                                     // Prepare Firestore batch of txs.

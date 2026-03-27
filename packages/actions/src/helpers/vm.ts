@@ -199,7 +199,7 @@ export const createEC2Instance = async (
                         Value: "false"
                     },
                     {
-                        Key: "ProjectName",
+                        Key: "Project",
                         Value: "trusted-setup"
                     }
                 ]
@@ -208,7 +208,7 @@ export const createEC2Instance = async (
                 ResourceType: "volume",
                 Tags: [
                     {
-                        Key: "ProjectName",
+                        Key: "Project",
                         Value: "trusted-setup"
                     }
                 ]
