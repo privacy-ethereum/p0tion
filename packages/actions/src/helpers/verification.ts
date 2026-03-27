@@ -145,7 +145,8 @@ export const exportVerifierAndVKey = async (
     const verifierCode = await exportVerifierContract(finalZkeyPath, templatePath)
     fs.writeFileSync(verifierLocalPath, verifierCode)
     const verificationKeyJSONData = await exportVkey(finalZkeyPath)
-    fs.writeFileSync(vKeyLocalPath, JSON.stringify(verificationKeyJSONData))
+    // use same formatting as in snarkjs cli
+    fs.writeFileSync(vKeyLocalPath, JSON.stringify(verificationKeyJSONData, null, 1))
 }
 
 /**

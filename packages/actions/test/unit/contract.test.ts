@@ -71,13 +71,13 @@ describe("Smart Contract", () => {
         const inputsPath = `${cwd()}/test/data/artifacts/inputs.json`
 
         before(async () => {
-            contractFactory = await ethers.getContractFactory("Verifier")
+            contractFactory = await ethers.getContractFactory("Groth16Verifier")
             mockVerifier = await contractFactory.deploy()
         })
 
         describe("Deployment", () => {
             it("should deploy the contract", async () => {
-                const factory = await ethers.getContractFactory("Verifier")
+                const factory = await ethers.getContractFactory("Groth16Verifier")
                 const contract = await factory.deploy()
                 expect(ethers.utils.isAddress(contract.address)).to.be.true
             })
