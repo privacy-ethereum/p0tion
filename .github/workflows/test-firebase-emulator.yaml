@@ -46,7 +46,7 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: 16
 
       # Needed to run Firebase Emulator
       - uses: actions/setup-java@v3

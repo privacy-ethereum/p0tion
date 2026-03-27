@@ -69,7 +69,7 @@ yarn add @p0tion/actions
 
 **Prerequisites**
 
--   Node.js version 20.0 or higher.
+-   Node.js version 16.0 or higher.
 -   Yarn version 3.5.0 or higher.
 
 Copy the `.env.default` file as `.env`:

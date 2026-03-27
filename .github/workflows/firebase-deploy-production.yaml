@@ -27,10 +27,10 @@ jobs:
         with:
           ref: ${{ inputs.branch }}
 
-      - name: Use Node.js 20
+      - name: Use Node.js 16
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: 16
           registry-url: "https://registry.npmjs.org"
 
       - name: Install npm packages and write env
