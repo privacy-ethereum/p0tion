@@ -3,10 +3,12 @@
         "baseUrl": ".",
         "target": "es2020",
         "module": "ESNext",
-        "moduleResolution": "Node16",
+        "moduleResolution": "nodenext",
         "allowSyntheticDefaultImports": true,
         "declaration": true,
         "declarationDir": "dist/types"
     },
-    "include": ["src"]
+    "include": [
+        "src"
+    ]
 }
