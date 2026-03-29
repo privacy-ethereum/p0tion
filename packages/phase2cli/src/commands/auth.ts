@@ -48,13 +48,15 @@ export const expirationCountdownForGithubOAuth = (expirationInSeconds: number) =
             secondsCounter -= interval
 
             if (secondsCounter === 0) {
-                secondsCounter = 59;
+                secondsCounter = 59
             }
 
             // Notify user.
             process.stdout.write(
                 `${theme.symbols.warning} Expires in ${theme.text.bold(
-                    theme.colors.magenta(`00:${Math.floor(expirationInSeconds / 60)}:${secondsCounter.toString().padStart(2, "0")}`)
+                    theme.colors.magenta(
+                        `00:${Math.floor(expirationInSeconds / 60)}:${secondsCounter.toString().padStart(2, "0")}`
+                    )
                 )}\r`
             )
         } else {
