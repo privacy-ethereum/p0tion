@@ -154,14 +154,14 @@ describe("Verification utilities", () => {
         })
     })
     describe("verifyGROTH16 Proof", () => {
-        it("should return true for a valid proof", async () => {
-            // generate
-            const inputs = {
+        const inputs = {
                 x1: "13",
                 x2: "7",
                 x3: "4",
                 x4: "2"
             }
+
+        it("should return true for a valid proof", async () => {
             const { proof, publicSignals } = await generateGROTH16Proof(inputs, finalZkeyPath, wasmPath)
             expect(proof).to.not.be.undefined
 
@@ -170,8 +170,9 @@ describe("Verification utilities", () => {
             expect(success).to.be.true
         })
         it("should fail when given an invalid vkey", async () => {
+            const { proof, publicSignals } = await generateGROTH16Proof(inputs, finalZkeyPath, wasmPath)
             // verify
-            await expect(verifyGROTH16Proof(invalidVKey, ["3", "4"], {})).to.be.rejected
+            await expect(verifyGROTH16Proof(invalidVKey, publicSignals, proof)).to.be.rejected
         })
     })
     describe("exportVerifierContract", () => {
