@@ -52,7 +52,7 @@ jobs:
       - name: Deploy to Firebase
         uses: docker://w9jds/firebase-action:master
         with:
-          args: deploy --only functions --project ${{ inputs.firebase_project }}
+          args: deploy --only functions --project ${{ inputs.firebase_project }} --force
         env:
           GCP_SA_KEY: ${{ secrets.SERVICE_ACCOUNT_KEY }}
           PROJECT_PATH: ./packages/backend
