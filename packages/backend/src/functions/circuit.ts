@@ -540,11 +540,10 @@ export const verifycontribution = functionsV2.https.onCall(
 
             // Derive necessary data.
             const lastZkeyIndex = formatZkeyIndex(completedContributions + 1)
-            const verificationTranscriptCompleteFilename = `${prefix}_${
-                isFinalizing
+            const verificationTranscriptCompleteFilename = `${prefix}_${isFinalizing
                     ? `${contributorOrCoordinatorIdentifier}_${finalContributionIndex}_verification_transcript.log`
                     : `${lastZkeyIndex}_${contributorOrCoordinatorIdentifier}_verification_transcript.log`
-            }`
+                }`
 
             const lastZkeyFilename = `${prefix}_${isFinalizing ? finalContributionIndex : lastZkeyIndex}.zkey`
 
@@ -666,11 +665,11 @@ export const verifycontribution = functionsV2.https.onCall(
                     )
 
                     /// @dev (there must be only one contribution with an empty 'doc' field).
-                    if (participantContributions.length !== 1)
+                    if (participantContributions.length === 0)
                         logAndThrowError(SPECIFIC_ERRORS.SE_VERIFICATION_NO_PARTICIPANT_CONTRIBUTION_DATA)
 
                     // Get contribution computation time.
-                    contributionComputationTime = contributions.at(0).computationTime
+                    contributionComputationTime = participantContributions.at(0).computationTime
 
                     // Step (1.A.4.A.2).
                     batch.create(contributionDoc.ref, {
@@ -779,10 +778,8 @@ export const verifycontribution = functionsV2.https.onCall(
                 await batch.commit()
 
                 printLog(
-                    `The contribution #${
-                        isFinalizing ? finalContributionIndex : lastZkeyIndex
-                    } of circuit ${circuitId} (ceremony ${ceremonyId}) has been verified as ${
-                        isContributionValid ? "valid" : "invalid"
+                    `The contribution #${isFinalizing ? finalContributionIndex : lastZkeyIndex
+                    } of circuit ${circuitId} (ceremony ${ceremonyId}) has been verified as ${isContributionValid ? "valid" : "invalid"
                     } for the participant ${participantDoc.id}`,
                     LogLevel.INFO
                 )
@@ -860,10 +857,8 @@ export const verifycontribution = functionsV2.https.onCall(
                 // Create and populate transcript.
                 const transcriptLogger = createCustomLoggerForFile(verificationTranscriptTemporaryLocalPath)
                 transcriptLogger.info(
-                    `${
-                        isFinalizing ? `Final verification` : `Verification`
-                    } transcript for ${prefix} circuit Phase 2 contribution.\n${
-                        isFinalizing ? `Coordinator ` : `Contributor # ${Number(lastZkeyIndex)}`
+                    `${isFinalizing ? `Final verification` : `Verification`
+                    } transcript for ${prefix} circuit Phase 2 contribution.\n${isFinalizing ? `Coordinator ` : `Contributor # ${Number(lastZkeyIndex)}`
                     } (${contributorOrCoordinatorIdentifier})\n`
                 )
 
