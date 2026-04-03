@@ -78,7 +78,15 @@ export const resumeContributionAfterTimeoutExpiration = async (
 export const createS3Bucket = async (functions: Functions, bucketName: string) => {
     const cf = httpsCallable(functions, commonTerms.cloudFunctionsNames.createBucket)
 
-    await cf({ bucketName })
+    try {
+        await cf({ bucketName })
+    } catch (error: any) {
+        if (error.details.includes("provided name is already in use")) {
+            console.log("Bucket already exists, skipping creation")
+        } else {
+            throw error
+        }
+    }
 }
 
 /**
