@@ -31,7 +31,8 @@ import path from "path"
 import os from "os"
 import { SSMClient } from "@aws-sdk/client-ssm"
 import { EC2Client } from "@aws-sdk/client-ec2"
-import { COMMON_ERRORS, logAndThrowError, SPECIFIC_ERRORS } from "./errors"
+import { COMMON_ERRORS, logAndThrowError, SPECIFIC_ERRORS, printLog } from "./errors"
+import { LogLevel } from "../types/enums"
 import { getS3Client } from "./services"
 
 dotenv.config()
@@ -54,8 +55,12 @@ export const getDocumentById = async (
 
     // Get document.
     const doc = await firestore.collection(collection).doc(documentId).get()
+    await firestore.collection(collection).listDocuments()
 
     // Return only if doc exists; otherwise throw error.
+    if (!doc.exists) {
+        printLog(`Document ${documentId} does not exist in collection ${collection}`, LogLevel.ERROR)
+    }
     return doc.exists ? doc : logAndThrowError(COMMON_ERRORS.CM_INEXISTENT_DOCUMENT)
 }
 
