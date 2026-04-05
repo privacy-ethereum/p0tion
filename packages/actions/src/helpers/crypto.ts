@@ -16,7 +16,7 @@ export const toHex = (buffer: Uint8Array): string => Array.from(buffer).map(toHe
 
 /**
  * Get 512 bit blake hash of the contents of given path.
- * @param data buffer or hexadecimal string
+ * @param path <fs.PathLike> - path to the file to hash
  * @returns 64 byte hexadecimal string
  */
 export const blake512FromPath = async (path: fs.PathLike): Promise<string> => {
