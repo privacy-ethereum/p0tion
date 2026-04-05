@@ -42,7 +42,7 @@ jobs:
     runs-on: ${{ needs.start-runner.outputs.label }} # run the job on the newly created runner
     steps:
       - name: checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       - uses: actions/setup-node@v3
         with:
